@@ -1,0 +1,18 @@
+# Ambiente virtual (cada pessoa cria o seu)
+.venv/
+
+# Artefatos do Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Ferramentas de teste
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Editores e sistema operacional
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store
