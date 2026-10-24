@@ -32,7 +32,7 @@ def test_casos_obrigatorios(entrada, esperado):
 )
 def test_tamanhos_diferentes(tamanho):
     """Cobre potências de 2, vizinhas delas e tamanhos ímpares."""
-    rng = random.Random(2000 + tamanho)  # semente fixa => reproduzível
+    rng = random.Random(2000 + tamanho)  
     entrada = [rng.randint(-500, 500) for _ in range(tamanho)]
 
     assert ordenar_intercalacao(entrada) == sorted(entrada)
