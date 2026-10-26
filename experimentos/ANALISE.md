@@ -243,10 +243,10 @@ o resumo principal e o custo da escolha foi medido separadamente. O resultado
 mais importante é a **decisão automática ruim no cenário C**, com evidência
 robusta e causa identificada.
 
-O próximo passo é a Etapa 13: consolidar estes números no `RELATORIO.md`,
-completar o `README.md` e fazer a revisão final. A estratégia não deve ser
-alterada sem uma nova rodada de medições; em particular, aumentar o limite de
-5.000 sem medir inversões poderia expor o Insertion a listas com uma única
-descida e muitas inversões.
+A Etapa 13 consolidou estes números no [`RELATORIO.md`](../RELATORIO.md) e no
+[`README.md`](../README.md). A estratégia não deve ser alterada sem uma nova
+rodada de medições; em particular, aumentar o limite de 5.000 sem medir
+inversões poderia expor o Insertion a listas com uma única descida e muitas
+inversões.
 
 
