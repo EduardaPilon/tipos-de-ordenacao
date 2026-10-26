@@ -71,7 +71,10 @@ exatas. Em particular, `tempo(ordenar)` não é necessariamente
 | `resultados/ambiente.json` | máquina, Python, sementes, lotes e parâmetros |
 | `resultados/tabelas.md` | tabelas legíveis e lista de decisões ruins |
 
-A análise dos números desta execução está em [ANALISE.md](ANALISE.md).
+A análise dos números desta execução está em [ANALISE.md](ANALISE.md). A
+comparação agregada do relatório é uma soma das medianas de `resumo.csv`; o
+harness não grava essa tabela separadamente. Se os tempos mudarem, recalcule a
+soma com os novos valores.
 
 ## Limitações
 

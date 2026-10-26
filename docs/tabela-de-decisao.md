@@ -278,6 +278,14 @@ Os quatro cenários, o protocolo e as tabelas completas estão em
 | C — quase ordenado, faixa larga | Insertion até 5k; Híbrido acima | **Decisão ruim confirmada** em 10k/50k; Insertion ~11× a 12× mais rápido |
 | D — pequeno, faixa estreita | Insertion até 16; Counting a partir de 17 | Limite `N_PEQUENO = 16` defensável; diferenças em 16 são microscópicas |
 
+No agregado dos 19 casos, `ordenar` soma 219,312 ms contra 249,097 ms do melhor
+método fixo (Híbrido), cerca de 1,14× mais rápido. Insertion, Merge, Quick e
+Radix são mais lentos no total; Counting não completa o cenário C. Em cada
+cenário isolado, porém, `ordenar` perde para o melhor fixo. A leitura correta é
+de **portfólio**: o cenário C é a decisão ruim exigida, e o erro não é escondido
+pela média. A tabela consolidada e a evidência agregada estão na
+[Seção 4.7 do relatório](../RELATORIO.md#47-comparação-consolidada-e-prova-de-portfólio).
+
 A estratégia não foi alterada nesta etapa. O caso C está documentado como
 evidência para uma futura melhoria; aumentar o limite de 5.000 sem uma medida
 de inversões poderia trocar um erro de desempenho por um risco de pior caso.

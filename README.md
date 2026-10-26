@@ -9,10 +9,17 @@ estratégia completa e o custo separado da escolha.
 
 ## Resultado em destaque
 
-O cenário quase ordenado revelou uma **decisão automática ruim**: em listas com
-10.000 e 50.000 elementos, a estratégia escolheu o Híbrido, mas o Insertion foi
-**11,27×** e **11,77×** mais rápido. O caso, sua causa e as ressalvas estão no
-[relatório](RELATORIO.md) e na [análise dos experimentos](experimentos/ANALISE.md).
+No **agregado dos 19 casos**, `ordenar(v)` levou **219,312 ms** contra
+**249,097 ms** do melhor método fixo (Híbrido), cerca de **1,14× mais rápido**.
+Nenhum método fixo vence a suíte inteira: Counting é inviável no cenário C,
+Insertion é muito lento em A/B e o Híbrido perde para Counting em B e para
+Insertion em C. A prova é de **portfólio**, não de vitória em cada cenário.
+
+A estratégia também erra: no cenário quase ordenado, com 10.000 e 50.000
+elementos, ela escolheu o Híbrido, mas o Insertion foi **11,27×** e **11,77×**
+mais rápido. Esse é o cenário de erro exigido pelo trabalho. O caso, sua causa,
+a tabela consolidada e a prova agregada estão no [relatório](RELATORIO.md) e na
+[análise dos experimentos](experimentos/ANALISE.md).
 
 ## Requisitos
 
@@ -90,6 +97,11 @@ O protocolo completo, os cenários e as limitações estão em
 [`experimentos/README.md`](experimentos/README.md). Os números oficiais estão em
 [`experimentos/resultados/tabelas.md`](experimentos/resultados/tabelas.md).
 
+A comparação agregada do relatório é derivada de
+[`experimentos/resultados/resumo.csv`](experimentos/resultados/resumo.csv):
+soma-se a mediana de cada caso. Se você reexecutar o benchmark, os tempos
+mudam e essa tabela deve ser recalculada com os novos valores.
+
 ## Estratégia de escolha
 
 A análise percorre a entrada uma única vez e obtém tamanho, mínimo, máximo,
@@ -135,14 +147,24 @@ Medianas da execução oficial de 26/10/2026 (7 repetições até 1.000 elemento
 | Cenário | Perfil | Escolha da estratégia | Leitura |
 |---|---|---|---|
 | A | aleatório, faixa larga (`k = 1.000.000`) | Híbrido em 1k/5k; Radix em 10k | Acertos dentro da margem; Radix ficou 2% atrás no empate de 10k |
-| B | aleatório, faixa estreita (`k = 1.000`) | Counting em 1k/5k/10k | Counting venceu com margem grande; escolha correta |
+| B | aleatório, faixa estreita (`k = 1.000`) | Counting em 1k/5k/10k | Counting venceu; escolha correta, mas `ordenar` perde para o Counting fixo por causa do custo de `escolher` |
 | C | quase ordenado, faixa larga | Insertion até 5k; Híbrido acima | **Decisão ruim** em 10k/50k; Insertion cerca de 11× mais rápido |
 | D | pequeno, faixa estreita | Insertion até 16; Counting a partir de 17 | Limite `N_PEQUENO = 16` defensável; diferenças microscópicas |
 
-A estratégia **não foi alterada** depois dos experimentos. O caso C está
-registrado como evidência de uma limitação real: a contagem de descidas
-adjacentes não mede o número de inversões, então elevar simplesmente o limite de
-5.000 poderia expor o Insertion a um pior caso quadrático.
+Somando as medianas dos 19 casos, o custo total é: `ordenar` **219,312 ms**;
+Híbrido **249,097 ms**; Merge 346,090 ms; Radix 434,036 ms; Quick 449,665 ms;
+Insertion 10.672,931 ms. Counting não completa o cenário C por causa do limite
+de memória. Assim, **nenhum dos seis métodos fixos vence `ordenar` no agregado**,
+embora `ordenar` perca para o melhor fixo em cada cenário isolado. A vantagem
+sobre o Híbrido é a mais apertada (cerca de 12,0% menos tempo) e deve ser lida como
+evidência empírica. A tabela completa e a explicação estão na
+[Seção 4.7 do relatório](RELATORIO.md#47-comparação-consolidada-e-prova-de-portfólio).
+
+A estratégia e os números oficiais **não foram alterados**; a revisão apenas
+explicitou a prova agregada. O caso C está registrado como evidência de uma
+limitação real: a contagem de descidas adjacentes não mede o número de
+inversões, então elevar simplesmente o limite de 5.000 poderia expor o Insertion
+a um pior caso quadrático.
 
 ## Estrutura do projeto
 

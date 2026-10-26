@@ -13,24 +13,32 @@ Os tempos são medianas de 7 repetições (`n <= 1000`) ou 5 repetições
 
 ## Resumo executivo
 
-1. O cenário C encontrou uma **decisão automática claramente ruim**: para
+1. No **agregado dos 19 casos**, `ordenar` somou **219,312 ms** contra
+   **249,097 ms** do melhor método fixo (Híbrido), cerca de **1,14× mais
+   rápido**. Nenhum método fixo vence a suíte completa.
+2. Em **cada cenário isolado**, `ordenar` perde para o melhor fixo: Híbrido em
+   A, Counting em B e D, Insertion em C. A vitória é de **portfólio**, não de
+   superioridade ponto a ponto.
+3. O cenário C encontrou uma **decisão automática claramente ruim**: para
    listas quase ordenadas com 10.000 e 50.000 elementos, a estratégia escolheu
    o Híbrido, mas o Insertion foi cerca de **11× a 12× mais rápido**.
-2. O cenário B confirmou o Counting Sort na faixa estreita: ele venceu em todos
-   os tamanhos testados.
-3. O cenário A mostrou o custo do Counting quando a faixa é larga: com
+4. O cenário B confirmou o Counting Sort na faixa estreita: ele venceu em todos
+   os tamanhos testados. A escolha é correta, mas `ordenar` não vence o Counting
+   fixo por causa do custo de `escolher`.
+5. O cenário A mostrou o custo do Counting quando a faixa é larga: com
    1.000.000 de contadores, ele ficou entre 120 ms e 199 ms, muito atrás do
    Híbrido/Base. A estratégia evitou essa escolha.
-4. No cenário D, o limite `N_PEQUENO = 16` se mostrou defensável. Em `n = 16`
+6. No cenário D, o limite `N_PEQUENO = 16` se mostrou defensável. Em `n = 16`
    o Counting foi ~30% mais rápido, mas a diferença foi de apenas 2,8 µs; em
    `n = 17` a estratégia já escolhe Counting.
-5. O Quick Sort nunca foi escolhido pela estratégia. Ele não venceu nenhum
+7. O Quick Sort nunca foi escolhido pela estratégia. Ele não venceu nenhum
    caso; em B/10.000 chegou a ser um pouco mais rápido que o Híbrido (28,97 ms
    contra 31,23 ms), mas o Counting foi muito melhor (5,36 ms). Em A e C ele
    ficou atrás do Híbrido.
-6. O custo de `escolher(v)` é pequeno em listas grandes, mas relevante quando o
+8. O custo de `escolher(v)` é pequeno em listas grandes, mas relevante quando o
    algoritmo escolhido é muito rápido: 22% a 29% do tempo total no cenário B e
-   ~44% a 50% no cenário C pequeno.
+   ~44% a 50% no cenário C pequeno. No agregado, ele é compensado pela
+   diversificação.
 
 ## A decisão automática ruim
 
@@ -196,6 +204,45 @@ mas em A é dominado por `k`; Radix em C é mais lento que em A porque há mais
 dígitos. O Quick não venceu nenhum caso desta execução, mas isso é uma
 observação empírica, não uma prova de que ele será sempre pior.
 
+## Comparação agregada e prova de portfólio
+
+O enunciado pede uma prova de que a estratégia ganha de qualquer escolha fixa e,
+ao mesmo tempo, um cenário em que ela erra. A leitura compatível com as duas
+exigências é **custo total no conjunto dos quatro cenários**: processar uma vez
+os 19 casos e somar as medianas. A Tabela abaixo usa essa métrica.
+
+| Cenário | Inserção | Intercalação | Rápida | Contagem | Base | Híbrido | `ordenar` |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| A | 5.441,891 | 57,350 | 69,348 | 494,502 | 47,665 | **45,977** | 48,079 |
+| B | 5.217,187 | 59,977 | 46,262 | **8,458** | 25,948 | 47,880 | 14,139 |
+| C | **13,410** | 228,418 | 333,894 | N/A | 360,278 | 155,039 | 156,944 |
+| D | 0,443 | 0,344 | 0,162 | **0,098** | 0,145 | 0,201 | 0,149 |
+
+| Método fixo | Custo total (ms) | `ordenar`/fixo | Ganho do `ordenar` |
+|---|---:|---:|---:|
+| Insertion | 10.672,931 | 0,0205 | 48,67× |
+| Merge | 346,090 | 0,6337 | 1,58× |
+| Quick | 449,665 | 0,4877 | 2,05× |
+| Counting | N/A | — | — |
+| Radix | 434,036 | 0,5053 | 1,98× |
+| Híbrido | 249,097 | 0,8804 | 1,14× |
+| `ordenar` | **219,312** | **1,0000** | — |
+
+Counting não completa o cenário C: a amplitude ultrapassa o limite de memória.
+Nos 15 casos em que é aplicável, `ordenar` soma 62,367 ms contra 503,058 ms do
+Counting. Assim, nenhum dos seis métodos fixos vence `ordenar` no agregado.
+
+A soma de medianas de execuções separadas é uma aproximação de carga total, não
+uma soma algébrica exata. A vantagem sobre o Híbrido é a menor (cerca de 12,0%
+menos tempo) e deve ser lida como evidência empírica; contra Insertion, Merge, Quick e
+Radix as diferenças são grandes.
+
+A estratégia perde para o melhor método fixo em todos os 19 pontos isolados. A
+vitória agregada vem de nenhum método fixo ser bom em todos: Counting é inviável
+em C e caro em A; Insertion vence C, mas é 48,67× mais lento no total; o Híbrido
+é o melhor geral, mas perde para Counting em B e Insertion em C. É uma vitória
+de **diversificação**, não de superioridade local.
+
 ## O que os dados sustentam
 
 - Counting é a melhor escolha para a faixa estreita testada (B), com margem
@@ -204,14 +251,20 @@ observação empírica, não uma prova de que ele será sempre pior.
   até 5.000), mas a regra atual erra acima de 5.000.
 - O Híbrido é uma escolha segura e rápida no caso geral (A), mas não é o melhor
   quando o Insertion é aplicável.
-- A estratégia acertou em A, B e D dentro da margem adotada; errou claramente
-  em C.
-- O custo de `escolher(v)` é relevante em B e nos casos pequenos, mas é uma
-  fração pequena do tempo quando o algoritmo escolhido é mais caro.
+- A estratégia acertou a decisão em A, B e D dentro da margem adotada; errou
+  claramente em C.
+- No agregado dos 19 casos, `ordenar` vence todos os métodos fixos válidos.
+- Em cada ponto isolado, `ordenar` perde para o melhor método fixo daquele
+  ponto; a vitória é de portfólio.
+- O custo de `escolher(v)` é relevante em B e nos casos pequenos, mas é
+  compensado no agregado pela diversificação.
 
 ## O que os dados não sustentam
 
 - Não é possível concluir que existe um algoritmo universalmente melhor.
+- Não é possível afirmar que `ordenar` vence cada cenário isoladamente.
+- A vitória agregada não se generaliza automaticamente para outras
+  distribuições, máquinas ou implementações.
 - Não é possível fixar limiares universais a partir de uma única máquina e de
   dados sintéticos.
 - A diferença de 2% entre Base e Híbrido em A/10.000 não é suficiente para
@@ -240,11 +293,14 @@ observação empírica, não uma prova de que ele será sempre pior.
 A Etapa 12 cumpriu o objetivo experimental: os quatro cenários são
 reproduzíveis, os seis algoritmos foram medidos quando aplicáveis, a mediana é
 o resumo principal e o custo da escolha foi medido separadamente. O resultado
-mais importante é a **decisão automática ruim no cenário C**, com evidência
+mais importante é duplo: **`ordenar` vence o agregado** dos 19 casos contra
+qualquer método fixo válido, mas **erra claramente no cenário C**, com evidência
 robusta e causa identificada.
 
 A Etapa 13 consolidou estes números no [`RELATORIO.md`](../RELATORIO.md) e no
-[`README.md`](../README.md). A estratégia não deve ser alterada sem uma nova
+[`README.md`](../README.md). A leitura correta é de **portfólio**: a estratégia
+pode perder em cada cenário isolado e ainda assim vencer a suíte, porque nenhum
+método fixo é bom em todos. A estratégia não deve ser alterada sem uma nova
 rodada de medições; em particular, aumentar o limite de 5.000 sem medir
 inversões poderia expor o Insertion a listas com uma única descida e muitas
 inversões.
