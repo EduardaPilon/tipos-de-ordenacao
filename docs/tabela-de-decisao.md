@@ -3,7 +3,8 @@
 Este documento descreve a estratégia implementada em `ordenador/selecao.py`.
 Ele separa explicitamente **teoria** (complexidades), **medições preliminares**
 (usadas para calibrar limiares) e **riscos conhecidos** (decisões que podem
-errar). A validação formal com os quatro cenários é feita na Etapa 12.
+errar). A validação formal com os quatro cenários está registrada em
+[`../experimentos/ANALISE.md`](../experimentos/ANALISE.md).
 
 ## 1. O que a análise observa
 
@@ -64,16 +65,18 @@ caso ainda é tolerável.
 As medições abaixo são **preliminares**: mediana de 5 repetições (7 na
 varredura de tamanho do Radix), nesta máquina, com dados aleatórios e sementes
 fixas. Elas serviram para calibrar constantes, não substituem o protocolo da
-Etapa 12.
+Etapa 12. Os resultados formais estão na seção 7 e em
+[`../experimentos/ANALISE.md`](../experimentos/ANALISE.md); em caso de
+divergência, valem os formais.
 
 | Constante | Valor | Evidência | Status |
 |---|---:|---|---|
-| `N_PEQUENO` | 16 | Ainda não medida isoladamente; coincide com o limiar do híbrido | Preliminar |
+| `N_PEQUENO` | 16 | Etapa 12: em n = 16, Insertion 12,15 µs × Counting 9,31 µs (diferença de 2,8 µs); em n = 17, Counting vence e é escolhido | Medida |
 | `RAZAO_CONTAGEM` | 8 | `k/n = 8` venceu; `k/n = 16` perdeu em n = 20.000 e 50.000 | Medida |
-| `LIMITE_QUASE_ORDENADO` | 5.000 | Proteção contra o caso de uma descida com O(n²) inversões | Teórica |
+| `LIMITE_QUASE_ORDENADO` | 5.000 | Proteção contra uma descida com muitas inversões; Etapa 12 confirmou que é conservador em listas grandes e benignas | Medida (risco confirmado) |
 | `FRACAO_QUASE_ORDENADA` | 20 (5%) | Heurística de ordem; não medida isoladamente | Preliminar |
-| `N_MINIMO_RADIX` | 10.000 | Em n = 5.000 o híbrido venceu (12,19 × 13,60 ms); em n = 10.000 o Radix venceu (23,01 × 23,54 ms) | Medida |
-| `MAX_DIGITOS_RADIX` | 7 | `d = 7` venceu; `d = 8` perdeu, em n = 20.000 e 50.000 | Medida |
+| `N_MINIMO_RADIX` | 10.000 | Em n = 5.000 o híbrido venceu; em n = 10.000 o Radix e o Híbrido ficaram empatados | Medida |
+| `MAX_DIGITOS_RADIX` | 7 | Preliminar: `d = 7` venceu e `d = 8` perdeu. Etapa 12: em A/10.000, Híbrido 32,09 ms × Base 32,72 ms | Medida, margem apertada |
 
 ### 3.1 Counting × híbrido por `k/n`
 
@@ -104,9 +107,10 @@ Tempos em ms:
 | 10 | 78,48 × 61,96 | 260,84 × 172,40 | Híbrido |
 
 A vitória em `d = 7` é pequena (45,69 × 46,14 ms, cerca de 1%); pode estar
-dentro do ruído. Já em `d = 8` a derrota é clara. O limite 7 fica no lado que
-a medição confirmou, mas a Etapa 12 deve repetir a fronteira com mais
-repetições.
+dentro do ruído. Já em `d = 8` a derrota é clara. A Etapa 12 repetiu a
+fronteira em A/10.000: Híbrido 32,09 ms × Base 32,72 ms, cerca de 2% a favor
+do Híbrido, com faixas de repetição sobrepostas. A regra ainda escolhe Radix
+em `d = 7`, mas a margem é apertada e não permite declarar um vencedor.
 
 ### 3.3 Piso do Radix com `d = 7`
 
@@ -159,8 +163,10 @@ Em cenários representativos, contra o algoritmo realmente escolhido:
 A análise é paga em qualquer escolha; portanto, não altera o ranking entre os
 algoritmos. Mas, quando o Counting é o escolhido, ela chega a cerca de um terço
 do tempo total. O Counting é tão rápido que a passagem de análise deixa de ser
-desprezível. A Etapa 12 mede isso com o protocolo formal; se necessário, a
-análise pode ser otimizada ou amostrada, ao preço de decisões menos precisas.
+desprezível. A Etapa 12 confirmou isso: no cenário B, `escolher` ficou entre
+22% e 29% da estratégia completa; no cenário C pequeno, entre 44% e 50%; no
+cenário C grande, cerca de 8%. Se necessário, a análise pode ser otimizada ou
+amostrada, ao preço de decisões menos precisas.
 
 ## 4. Exemplos de decisão
 
@@ -193,36 +199,46 @@ análise pode ser otimizada ou amostrada, ao preço de decisões menos precisas.
 
 1. **Uma descida pode esconder muitas inversões.** O caso 4 usa `D` como
    heurística, mas `D` não limita o trabalho do Insertion. Para `n ≤ 5.000`
-   aceitamos o risco; acima disso, não. A Etapa 12 vai comparar, no cenário C,
-   o que a estratégia escolheu com o que teria sido mais rápido. Se o
-   Insertion tivesse vencido em listas grandes e benignas, esta será uma
-   decisão automática ruim documentada.
+   aceitamos o risco; acima disso, não. A Etapa 12 comparou, no cenário C, o
+   que a estratégia escolheu com o que teria sido mais rápido e confirmou uma
+   **decisão automática ruim**: em 10.000 e 50.000, o Híbrido foi cerca de
+   11,27× e 11,77× mais lento que o Insertion. Isso não significa que o limite
+   deva ser simplesmente elevado: `D` continua não limitando inversões, e uma
+   lista com uma única descida pode ser quadraticamente cara. Uma correção
+   precisaria de uma medida melhor de desordem.
 
 2. **A razão `k/n` não olha a distribuição.** Dois conjuntos com a mesma
    amplitude podem ter distribuições muito diferentes. O Counting paga
    `O(k)` independentemente de quantos valores distintos existem; a regra não
    detecta concentração. Detectar isso custaria memória ou outra passagem.
 
-3. **A fronteira do Radix em `d = 7` é apertada.** A diferença medida foi de
-   cerca de 1%; pode ser ruído. A regra é conservadora em `d = 8`, mas a
-   fronteira precisa de confirmação com mais repetições.
+3. **A fronteira do Radix em `d = 7` é apertada.** A diferença preliminar era
+   de cerca de 1%; pode ser ruído. A Etapa 12 encontrou 2% a favor do Híbrido
+   em A/10.000 (32,09 × 32,72 ms), com faixas de repetição sobrepostas. Não há
+   vencedor claro nessa fronteira; em `d = 8` a regra é conservadora e o
+   Híbrido venceu com margem.
 
-4. **`N_PEQUENO = 16` ainda é preliminar.** O cenario D (listas minusculas)
-   deve dizer se 16 é o ponto adequado ou se outro valor reduz o tempo.
+4. **`N_PEQUENO = 16` foi validado no cenário D.** Em `n = 16`, o Insertion
+   levou 12,15 µs e o Counting 9,31 µs; a diferença de 2,8 µs é pequena demais
+   para tratar como decisão ruim. Em `n = 17`, o Counting já é escolhido e foi
+   o melhor. O limite é defensável para os dados testados, embora não tenha
+   sido isolado em todas as distribuições.
 
-5. **Quick Sort nunca é escolhido.** Nas medições, o híbrido foi mais rápido
-   nos casos em que o Quick seria candidato (faixa larga e faixa enorme). O
-   Quick tem vantagem de memória O(log n) contra O(n) do híbrido, mas a
-   estratégia atual não mede memória disponível. Ele permanece no registro e
-   nos testes como alternativa e base de comparação. Uma extensão possível
-   seria `escolher(v, memoria_limitada=True)`, mas isso não foi pedido.
+5. **Quick Sort nunca é escolhido.** Nas medições, o Quick não venceu nenhum
+   caso. Em A e C o Híbrido foi mais rápido; em B/10.000 o Quick ficou
+   levemente à frente do Híbrido (28,97 × 31,23 ms), mas o Counting foi muito
+   melhor (5,36 ms). O Quick tem vantagem de memória O(log n) contra O(n) do
+   híbrido, mas a estratégia atual não mede memória disponível. Ele permanece no
+   registro e nos testes como alternativa e base de comparação. Uma extensão
+   possível seria `escolher(v, memoria_limitada=True)`, mas isso não foi pedido.
 
 6. **A análise custa O(n) e não é desprezível.** Em 200.000 elementos ela
    levou cerca de 36 ms; com Counting, isso foi ~32% do tempo total (ver
-   §3.5). O custo é pago em qualquer escolha e não muda o ranking, mas afeta o
-   tempo absoluto. A Etapa 12 mede com o protocolo formal; se necessário, a
-   análise pode ser otimizada ou amostrada, ao preço de decisões menos
-   precisas.
+   §3.5). A Etapa 12 mediu com o protocolo formal: 22% a 29% no cenário B,
+   44% a 50% no cenário C pequeno e cerca de 8% no cenário C grande. O custo é
+   pago em qualquer escolha e não muda o ranking, mas afeta o tempo absoluto.
+   Se necessário, a análise pode ser otimizada ou amostrada, ao preço de
+   decisões menos precisas.
 
 7. **Apenas números.** Counting e Radix exigem inteiros; floats caem no
    Insertion/Híbrido. A função não foi projetada para strings ou objetos.
@@ -239,14 +255,34 @@ análise pode ser otimizada ou amostrada, ao preço de decisões menos precisas.
 | Teoria | Counting é O(n + k); Radix é O(d(n + 10)); Merge é O(n log n) |
 | Medição preliminar | Em n = 20.000 e `k ≈ 10⁶`, Radix 41,49 ms × híbrido 48,77 ms |
 | Medição preliminar | `escolher` levou 3,18 ms em 20.000 e 36,35 ms em 200.000 (faixa estreita) |
-| Decisão derivada | Usar Radix quando `d ≤ 7` e `n ≥ 10.000` |
-| Ainda não medido | Cenários A–D completos; taxa de acerto da estratégia; custo da escolha em cada cenário |
+| Medição formal (Etapa 12) | Cenários A-D, 7 repetições até 1.000 e 5 acima; ver seção 7 |
+| Decisão ruim confirmada | C/10.000 e C/50.000: Híbrido ~11,27× e ~11,77× mais lento que Insertion |
+| Decisão derivada | Usar Radix quando `d ≤ 7` e `n ≥ 10.000`, com margem apertada em `d = 7` |
 
-Nenhum número deste documento foi inventado: todos vêm das execuções
-registradas na Etapa 10. A Etapa 12 repetirá as medições com o protocolo
-formal, mais repetições e os quatro cenários obrigatórios.
+Nenhum número deste documento foi inventado: os preliminares vêm da Etapa 10
+e os formais da Etapa 12, registrados em
+[`../experimentos/resultados/medicoes.csv`](../experimentos/resultados/medicoes.csv).
+As duas etapas usam protocolos diferentes; não misture os números como se
+fossem da mesma execução.
 
-## 7. Como usar
+## 7. Resultados formais da Etapa 12
+
+Os quatro cenários, o protocolo e as tabelas completas estão em
+[`../experimentos/README.md`](../experimentos/README.md) e
+[`../experimentos/ANALISE.md`](../experimentos/ANALISE.md). Resumo:
+
+| Cenário | Estratégia | Resultado |
+|---|---|---|
+| A — aleatório, faixa larga | Híbrido em 1k/5k; Radix em 10k | Acertos dentro da margem; em 10k o Híbrido foi 2% mais rápido, empate técnico |
+| B — aleatório, faixa estreita | Counting em 1k/5k/10k | Counting venceu todos; `escolher` custou 22% a 29% do total |
+| C — quase ordenado, faixa larga | Insertion até 5k; Híbrido acima | **Decisão ruim confirmada** em 10k/50k; Insertion ~11× a 12× mais rápido |
+| D — pequeno, faixa estreita | Insertion até 16; Counting a partir de 17 | Limite `N_PEQUENO = 16` defensável; diferenças em 16 são microscópicas |
+
+A estratégia não foi alterada nesta etapa. O caso C está documentado como
+evidência para uma futura melhoria; aumentar o limite de 5.000 sem uma medida
+de inversões poderia trocar um erro de desempenho por um risco de pior caso.
+
+## 8. Como usar
 
 ```python
 from ordenador.selecao import analisar, escolher
@@ -256,5 +292,6 @@ print(perfil)          # Perfil(n=5, minimo=1, maximo=9, ...)
 print(escolher([5, 1, 4, 1, 9]))  # 'insercao'
 ```
 
-A Etapa 11 usará `escolher` dentro de `ordenar(v)`, que aplicará o algoritmo
-escolhido e devolverá a lista ordenada.
+A Etapa 11 implementou `ordenar(v)`, que usa `escolher`, aplica o algoritmo
+escolhido e devolve uma nova lista ordenada. A Etapa 12 mediu a estratégia
+completa e o custo da escolha separadamente.

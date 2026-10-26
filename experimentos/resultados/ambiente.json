@@ -1,0 +1,95 @@
+{
+  "gerado_em": "2026-10-26T13:42:09-0300",
+  "python": "3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]",
+  "plataforma": {
+    "sistema": "Windows",
+    "release": "11",
+    "versao": "10.0.26200",
+    "maquina": "AMD64",
+    "processador": "AMD64 Family 25 Model 68 Stepping 1, AuthenticAMD"
+  },
+  "cpu_count": 16,
+  "semente_base": 20261026,
+  "repeticoes": {
+    "n_ate_1000": 7,
+    "n_acima_1000": 5
+  },
+  "lotes_pequenos": {
+    "0": 20000,
+    "1": 20000,
+    "2": 15000,
+    "5": 10000,
+    "10": 5000,
+    "16": 2000,
+    "17": 2000,
+    "50": 300,
+    "100": 200
+  },
+  "limite_contadores": 1000000,
+  "cenarios": {
+    "A": {
+      "titulo": "Aleatório, faixa larga",
+      "descricao": "Valores uniformes entre 0 e 999.999",
+      "tamanhos": [
+        1000,
+        5000,
+        10000
+      ],
+      "semente": "SEMENTE_BASE + n"
+    },
+    "B": {
+      "titulo": "Aleatório, faixa estreita",
+      "descricao": "Valores uniformes entre 0 e 999",
+      "tamanhos": [
+        1000,
+        5000,
+        10000
+      ],
+      "semente": "SEMENTE_BASE + 1000 + n"
+    },
+    "C": {
+      "titulo": "Quase ordenado, faixa larga",
+      "descricao": "Base ordenada com 0,1% de trocas adjacentes",
+      "tamanhos": [
+        1000,
+        5000,
+        10000,
+        50000
+      ],
+      "semente": "determinística"
+    },
+    "D": {
+      "titulo": "Pequeno, faixa estreita",
+      "descricao": "Valores uniformes entre 0 e 9",
+      "tamanhos": [
+        0,
+        1,
+        2,
+        5,
+        10,
+        16,
+        17,
+        50,
+        100
+      ],
+      "semente": "SEMENTE_BASE + 2000 + n"
+    }
+  },
+  "algoritmos": [
+    "insercao",
+    "intercalacao",
+    "rapida",
+    "contagem",
+    "base",
+    "hibrido"
+  ],
+  "casos_medidos": 19,
+  "observacoes": [
+    "Tempos em milissegundos por chamada.",
+    "A entrada e a mesma para todos os algoritmos de um caso.",
+    "Aquecimento em uma amostra de ate 1000 elementos.",
+    "A ordem dos algoritmos gira a cada repeticao.",
+    "O GC e desativado durante cada medicao.",
+    "Counting nao e medido quando a amplitude excede o limite."
+  ]
+}
