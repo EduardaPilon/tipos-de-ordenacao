@@ -5,7 +5,6 @@ seis algoritmos de ordenação e uma estratégia que analisa a entrada e escolhe
 deles automaticamente. Quatro cenários reproduzíveis medem os algoritmos, a
 estratégia completa e o custo separado da escolha.
 
-**Etapas 1 a 13 concluídas.** A suíte atual tem **493 testes**.
 
 ## Resultado em destaque
 
